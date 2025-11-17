@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>商科留学生写作助手 Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: sans-serif; background: #0f172a; color: #e5e7eb; }
+    .container { max-width: 960px; margin: 0 auto; padding: 24px 16px 48px; }
+    header { padding: 24px 0; }
+    h1 { font-size: 26px; margin: 0 0 8px; }
+    .sub { color: #9ca3af; font-size: 14px; }
+    .card { background: #111827; border-radius: 12px; padding: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); margin-top: 16px; }
+    label { display: block; font-size: 14px; margin-bottom: 6px; color: #d1d5db; }
+    textarea { width: 100%; min-height: 120px; border-radius: 8px; border: 1px solid #374151; background: #020617; color: #e5e7eb; padding: 10px 12px; font-size: 14px; resize: vertical; outline: none; }
+    textarea:focus { border-color: #6366f1; }
+    .btn { margin-top: 16px; padding: 10px 18px; border-radius: 999px; border: none; background: linear-gradient(135deg, #6366f1, #22c55e); color: #f9fafb; font-weight: 600; font-size: 14px; cursor: pointer; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .hint { font-size: 12px; color: #9ca3af; margin-top: 4px; }
+    .output { margin-top: 24px; white-space: pre-wrap; font-size: 14px; line-height: 1.6; background: #020617; border-radius: 12px; padding: 16px; border: 1px solid #1f2937; }
+    .badge { display: inline-block; font-size: 11px; padding: 4px 8px; border-radius: 999px; background: rgba(56, 189, 248, 0.1); color: #38bdf8; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge">商科留学生写作助手 Demo</div>
+      <h1>一键生成 Essay/Report 框架与示范段落</h1>
+      <div class="sub">
+        粘贴作业要求（assignment brief）和你的思路，几秒钟获得：读题解析、结构大笔和学术英文示范。
+      </div>
+    </header>
+    <main class="card">
+      <div>
+        <label for="assignment">作业要求（assignment brief）</label>
+        <textarea id="assignment" placeholder="复制粘贴作业要求文本..."></textarea>
+        <div class="hint">请尽量包含评分标准或需要回答的具体问题。</div>
+      </div>
+      <div style="margin-top: 16px;">
+        <label for="notes">你的核心观点或论点方向（可选）</label>
+        <textarea id="notes" placeholder="如：我要分析某个公司，赞同/ 反对某理论，或自己的初步想法..."></textarea>
+        <div class="hint">提供你的观点可以让生成内容更贴合你。</div>
+      </div>
+      <button id="submitBtn" class="btn">生成写作框架</button>
+      <div class="hint">
+        本 Demo 仅用于展示功能，生成内容为模拟结果，请勿直接提交作业。
+      </div>
+      <div id="output" class="output" style="display: none;"></div>
+    </main>
+  </div>
+  <script>
+    // Local function to simulate AI response without a backend
+    function generateSimulatedResponse(assignmentText, studentNotes) {
+      const trimmedAssignment = assignmentText.trim().slice(0, 100);
+      const trimmedNotes = studentNotes.trim().slice(0, 100);
+      return `\n1. Task understanding\n - This assignment appears to request analysis based on the following excerpt of your brief: "${trimmedAssignment}…"\n - You should identify the main topic, understand the requirements, and consult the grading rubric.\n - Key grading criteria likely include clarity of argument, appropriate structure, evidence of critical thinking, and correct referencing.\n\n2. Essay/report outline\n - Introduction (approx. 150 words): Provide background and define the problem or topic.\n - Body section 1 (approx. 400 words): Discuss the first main point. Explain relevant theories and cite readings.\n - Body section 2 (approx. 400 words): Discuss the second main point. Compare alternative viewpoints.\n - Body section 3 (approx. 400 words): Discuss the third main point or case study. Evaluate implications.\n - Conclusion (approx. 150 words): Summarise the key arguments and reflect on significance.\n\n3. Example academic English (short)\n - Topic sentence: Based on your note "${trimmedNotes}…", the initial argument could be framed as follows: "According to recent lectures, the importance of this concept cannot be overstated because …"\n - Supporting sentence: Further discussion could highlight evidence from course readings and show how it supports your argument.\n - Supporting sentence: You might also contrast different perspectives to demonstrate critical thinking.\n\n4. Academic integrity reminder\n - You must rewrite and reorganise the provided text in your own words.\n - Add your own examples, cases, and references from your readings.\n - Follow your university's policy on AI-assisted writing and acknowledge any assistance used.\n  `;
+    }
+    const submitBtn = document.getElementById('submitBtn');
+    const outputEl = document.getElementById('output');
+    submitBtn.addEventListener('click', function() {
+      const assignmentText = document.getElementById('assignment').value.trim();
+      const studentNotes = document.getElementById('notes').value.trim();
+      if (!assignmentText) {
+        alert('请先填写作业要求。');
+        return;
+      }
+      submitBtn.disabled = true;
+      submitBtn.textContent = '生成中，请稍候...';
+      outputEl.style.display = 'block';
+      outputEl.textContent = '生成中...';
+      // Simulate asynchronous response
+      setTimeout(function() {
+        const result = generateSimulatedResponse(assignmentText, studentNotes);
+        outputEl.textContent = result || '(\u672a\u83b7\u53d6\u5230\u5185\u5bb9)';
+        submitBtn.disabled = false;
+        submitBtn.textContent = '生成写作框架';
+      }, 300);
+    });
+  </script>
+</body>
+</html>
