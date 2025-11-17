@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang='zh-CN'>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width,initial-scale=1'>
+<title>留学生写作助手 · Writing Assistant</title>
+<style>
+:root {
+  --bg: #faf6f0;
+  --card-bg: #ffffff;
+  --border: #e4ded3;
+  --text-main: #4a3b2a;
+  --text-muted: #8b7961;
+  --accent: #22c55e;
+  --accent-soft: #dcfce7;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text-main);}
+.container{max-width:960px;margin:0 auto;padding:32px 16px;}
+.switcher{text-align:right;margin-bottom:12px;}
+.switcher button{border:1px solid transparent;background:transparent;padding:4px 10px;border-radius:999px;font-size:12px;color:var(--text-muted);cursor:pointer;margin-left:6px;}
+.switcher button.active{background:var(--accent-soft);border-color:var(--accent);color:var(--text-main);}
+header .title{font-size:24px;font-weight:600;margin:10px 0 6px;}
+header .subtitle{font-size:14px;color:var(--text-muted);}
+.card{background:var(--card-bg);border:1px solid var(--border);border-radius:24px;padding:20px;margin-top:16px;box-shadow:0 6px 20px rgba(0,0,0,0.08);}
+.card-title{font-size:16px;font-weight:600;margin-bottom:8px;}
+.card-desc{font-size:12px;color:var(--text-muted);margin-bottom:12px;}
+label{display:block;font-size:12px;margin-top:12px;color:var(--text-main);}
+textarea{width:100%;border:1px solid var(--border);border-radius:12px;padding:10px;font-size:13px;resize:vertical;min-height:100px;background:#fdfbf7;color:var(--text-main);}
+textarea:focus{outline:none;border-color:var(--accent);}
+button.btn{margin-top:16px;padding:8px 20px;border:none;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(34,197,94,0.3);}
+button.btn-primary{background:linear-gradient(135deg,#16a34a,#22c55e);color:#f9fafb;}
+button.btn-secondary{background:#f5f5f5;color:var(--text-muted);border:1px solid var(--border);}
+.output-section{margin-top:18px;}
+.output-title{font-size:14px;font-weight:600;margin-bottom:6px;}
+.output-box{border:1px dashed var(--border);border-radius:18px;padding:12px;background:#fdfbf7;font-size:13px;white-space:pre-wrap;color:var(--text-main);}
+.notice{font-size:12px;color:var(--text-muted);margin-top:8px;}
+</style>
+<div class='container'>
+  <div class='switcher'>
+    <button id='btn-zh' class='active' onclick='setLang("zh")'>中文</button>
+    <button id='btn-en' onclick='setLang("en")'>EN</button>
+  </div>
+  <header>
+    <div class='title' id='title-text'></div>
+    <div class='subtitle' id='subtitle-text'></div>
+  </header>
+  <div class='card'>
+    <div class='card-title' id='input-title'></div>
+    <div class='card-desc' id='input-desc'></div>
+    <label id='label-brief'></label>
+    <textarea id='brief' placeholder=''></textarea>
+    <label id='label-rubric'></label>
+    <textarea id='rubric' placeholder=''></textarea>
+    <label id='label-notes'></label>
+    <textarea id='notes' placeholder=''></textarea>
+    <div style='margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;'>
+      <button class='btn btn-primary' id='btn-analyze' onclick='analyze()'></button>
+      <button class='btn btn-primary' id='btn-generate' onclick='generateEssay()'></button>
+      <button class='btn btn-secondary' onclick='clearAll()' id='btn-clear'></button>
+    </div>
+    <div class='notice' id='input-notice'></div>
+  </div>
+  <div class='card' style='margin-top:20px;'>
+    <div class='output-section'>
+      <div class='output-title' id='analysis-title'></div>
+      <div class='output-box' id='analysis-output'></div>
+    </div>
+    <div class='output-section'>
+      <div class='output-title' id='essay-title'></div>
+      <div class='output-box' id='essay-output'></div>
+    </div>
+    <div class='notice' id='output-notice'></div>
+  </div>
+</div>
+<script>
+let lang='zh';
+const strings={
+  zh:{
+    title:'留学生写作助手',
+    subtitle:'输入作业要求、评分标准和你的观点，即可获得任务分析与示范稿，仅供参考，请勿直接提交。',
+    inputTitle:'输入信息',
+    inputDesc:'请尽可能提供完整的作业要求和评分标准，以便更好地分析。',
+    labelBrief:'作业要求（中文或英文）',
+    placeholderBrief:'粘贴 assignment brief：题目说明、字数要求、格式说明等…',
+    labelRubric:'评分标准（可选）',
+    placeholderRubric:'粘贴评分标准或要点（如批判性分析、逻辑、引用格式等）',
+    labelNotes:'你的观点 / 案例（可选）',
+    placeholderNotes:'例如：分析哪家公司，支持或反对什么观点，使用哪些理论…',
+    analyzeBtn:'分析要求',
+    generateBtn:'生成示范稿',
+    clearBtn:'清空',
+    missingBrief:'请先粘贴作业要求。',
+    analysisTitle:'分析结果',
+    essayTitle:'示范稿',
+    noAnalysis:'尚未生成分析结果。',
+    noEssay:'尚未生成示范稿。',
+    inputNotice:'注意：此工具仅用于学习与辅导，帮助理解题目与构建结构，不替代你自己的思考。',
+    outputNotice:'提示：以上内容仅供参考，请结合课程资料和个人理解进行重写与完善。'
+  },
+  en:{
+    title:'Writing Assistant for Students',
+    subtitle:'Enter assignment brief, rubric and your ideas to get task analysis and a sample draft. For reference only, do not submit directly.',
+    inputTitle:'Input Information',
+    inputDesc:'Provide as much assignment detail and rubric as possible for better analysis.',
+    labelBrief:'Assignment brief',
+    placeholderBrief:'Paste assignment brief: description, word count, format…',
+    labelRubric:'Marking rubric (optional)',
+    placeholderRubric:'Paste key marking criteria, e.g., critical analysis, logic, referencing…',
+    labelNotes:'Your ideas / case (optional)',
+    placeholderNotes:'E.g., which company to analyze, which side you stand on, which theories to use…',
+    analyzeBtn:'Analyze',
+    generateBtn:'Generate sample',
+    clearBtn:'Clear',
+    missingBrief:'Please paste the assignment brief first.',
+    analysisTitle:'Analysis Result',
+    essayTitle:'Sample Draft',
+    noAnalysis:'Analysis result not generated yet.',
+    noEssay:'Sample draft not generated yet.',
+    inputNotice:'Note: This tool is for study and guidance only. It helps you understand the assignment and build structure, not to replace your own thinking.',
+    outputNotice:'Tip: The above content is for reference only. Please rewrite and expand it using course materials and your own understanding.'
+  }
+};
+function setLang(l){
+  lang=l;
+  document.documentElement.lang=l==='zh'?'zh-CN':'en';
+  document.getElementById('btn-zh').classList.toggle('active',l==='zh');
+  document.getElementById('btn-en').classList.toggle('active',l==='en');
+  updateTexts();
+}
+function updateTexts(){
+  const t=strings[lang];
+  document.getElementById('title-text').innerText=t.title;
+  document.getElementById('subtitle-text').innerText=t.subtitle;
+  document.getElementById('input-title').innerText=t.inputTitle;
+  document.getElementById('input-desc').innerText=t.inputDesc;
+  document.getElementById('label-brief').innerText=t.labelBrief;
+  document.getElementById('brief').placeholder=t.placeholderBrief;
+  document.getElementById('label-rubric').innerText=t.labelRubric;
+  document.getElementById('rubric').placeholder=t.placeholderRubric;
+  document.getElementById('label-notes').innerText=t.labelNotes;
+  document.getElementById('notes').placeholder=t.placeholderNotes;
+  document.getElementById('btn-analyze').innerText=t.analyzeBtn;
+  document.getElementById('btn-generate').innerText=t.generateBtn;
+  document.getElementById('btn-clear').innerText=t.clearBtn;
+  document.getElementById('input-notice').innerText=t.inputNotice;
+  document.getElementById('analysis-title').innerText=t.analysisTitle;
+  document.getElementById('essay-title').innerText=t.essayTitle;
+  if(!document.getElementById('analysis-output').textContent.trim()) document.getElementById('analysis-output').innerText=t.noAnalysis;
+  if(!document.getElementById('essay-output').textContent.trim()) document.getElementById('essay-output').innerText=t.noEssay;
+  document.getElementById('output-notice').innerText=t.outputNotice;
+}
+function clearAll(){
+  document.getElementById('brief').value='';
+  document.getElementById('rubric').value='';
+  document.getElementById('notes').value='';
+  document.getElementById('analysis-output').innerText=strings[lang].noAnalysis;
+  document.getElementById('essay-output').innerText=strings[lang].noEssay;
+}
+function analyze(){
+  const brief=document.getElementById('brief').value.trim();
+  const rubric=document.getElementById('rubric').value.trim();
+  const t=strings[lang];
+  if(!brief){
+    document.getElementById('analysis-output').innerText=t.missingBrief;
+    return;
+  }
+  let result='';
+  const first=brief.split(/[。\.\!\?\n]/)[0];
+  if(lang==='zh'){
+    result+='任务理解:\n';
+    result+='根据题目“'+first+'…”，你需要明确主要讨论的主题并回答所有问题。\n\n';
+    result+='评分要点:\n';
+    if(rubric){
+      const lines=rubric.split(/\n+/).filter(s=>s.trim());
+      lines.forEach((s,i)=>{ result+= (i+1)+'. '+s.trim()+'\n';});
+    } else {
+      result+='理论应用 / 批判性分析 / 结构清晰 / 引用格式\n';
+    }
+    result+='\n建议结构:\n';
+    result+='引言：约100字，介绍主题并提出论点。\n';
+    result+='主体：约600字，每段一个论点，使用证据支持。\n';
+    result+='结论：约100字，重申论点并总结。\n';
+  } else {
+    result+='Task understanding:\n';
+    result+='Based on the brief "'+first+'...", you need to identify the main topic and address all required questions.\n\n';
+    result+='Key marking criteria:\n';
+    if(rubric){
+      const lines=rubric.split(/\n+/).filter(s=>s.trim());
+      lines.forEach((s,i)=>{ result+= (i+1)+'. '+s.trim()+'\n';});
+    } else {
+      result+='Theory application / critical analysis / clear structure / referencing format\n';
+    }
+    result+='\nSuggested structure:\n';
+    result+='Introduction: ~100 words, introduce the topic and present the thesis.\n';
+    result+='Body: ~600 words, each paragraph one argument with evidence.\n';
+    result+='Conclusion: ~100 words, restate the argument and summarise.\n';
+  }
+  document.getElementById('analysis-output').innerText=result;
+}
+function generateEssay(){
+  const brief=document.getElementById('brief').value.trim();
+  const notes=document.getElementById('notes').value.trim();
+  const t=strings[lang];
+  if(!brief){
+    document.getElementById('essay-output').innerText=t.missingBrief;
+    return;
+  }
+  const first=brief.split(/[。\.\!\?\n]/)[0];
+  const topic=notes|| (lang==='zh'?'该主题':'the topic');
+  let essay='';
+  if(lang==='zh'){
+    essay+='引言：依据作业“'+first+'…”，本文将从“'+topic+'”角度阐述话题，概述背景并提出中心论点。\n\n';
+    essay+='主体一：解释“'+topic+'”的基本概念及其重要性，结合课程内容给出定义与背景。\n\n';
+    essay+='主体二：分析“'+topic+'”的不同观点或案例，引用理论或课件支撑论证，并讨论异同。\n\n';
+    essay+='主体三：探讨“'+topic+'”面临的挑战与未来发展，提出自己的看法或批判性思考。\n\n';
+    essay+='结论：总结全文，再次强调“'+topic+'”与题目的关联，并提出建议或反思。';
+  } else {
+    essay+='Introduction: Based on the assignment "'+first+'...", this essay discusses "'+topic+'" as the central focus, outlining background and stating the main argument.\n\n';
+    essay+='Body Paragraph 1: Explain the basic concepts and importance of "'+topic+'", providing definitions and context from course materials.\n\n';
+    essay+='Body Paragraph 2: Analyse different perspectives or cases about "'+topic+'", citing theories or class readings and discussing similarities and differences.\n\n';
+    essay+='Body Paragraph 3: Explore the challenges and future development of "'+topic+'", offering your own insights or critical reflections.\n\n';
+    essay+='Conclusion: Summarise the essay, reiterate how "'+topic+'" relates to the assignment question, and propose suggestions or reflections.';
+  }
+  document.getElementById('essay-output').innerText=essay;
+}
+updateTexts();
+</script>
+</html>
